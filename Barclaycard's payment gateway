@@ -1,0 +1,63 @@
+using System;
+using System.Security.Cryptography;
+using System.Text;
+using System.Web.UI;
+
+public partial class YourPage : Page
+{
+    protected void Button1_Click(object sender, EventArgs e)
+    {
+        string strPW = "Enter Passphrase";
+
+        BarClayCardModel model = new BarClayCardModel
+        {
+            Amount = "1000",
+            Currency = "GBP",
+            Language = "en_US",
+            OrderId = Guid.NewGuid().ToString().Substring(0, 13),
+            Pspid = "Enter PSPID",
+            Email = "Customer Email ",
+            CN = "Customer Name",
+            AcceptUrl = "Success URL"
+        };
+
+        string plainDigest = $"ACCEPTURL={model.AcceptUrl}{strPW}AMOUNT={model.Amount}{strPW}CN={model.CN}{strPW}CURRENCY={model.Currency}{strPW}EMAIL={model.Email}{strPW}LANGUAGE={model.Language}{strPW}ORDERID={model.OrderId}{strPW}PSPID={model.Pspid}{strPW}";
+        string SHASIGN = ComputeSHA1HASH(plainDigest);
+
+        string targetUrl = "https://mdepayments.epdq.co.uk/ncol/test/orderstandard.asp";
+
+        Response.Redirect($"{targetUrl}?{GetQueryString(model, SHASIGN)}");
+    }
+
+    private string ComputeSHA1HASH(string input)
+    {
+        using (SHA1 sha1 = SHA1.Create())
+        {
+            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+            byte[] hashBytes = sha1.ComputeHash(inputBytes);
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (byte b in hashBytes)
+            {
+                stringBuilder.Append(b.ToString("X2"));
+            }
+            return stringBuilder.ToString();
+        }
+    }
+
+    private string GetQueryString(BarClayCardModel model, string SHASIGN)
+    {
+        return $"ACCEPTURL={Uri.EscapeDataString(model.AcceptUrl)}&AMOUNT={Uri.EscapeDataString(model.Amount)}&CN={Uri.EscapeDataString(model.CN)}&CURRENCY={Uri.EscapeDataString(model.Currency)}&EMAIL={Uri.EscapeDataString(model.Email)}&LANGUAGE={Uri.EscapeDataString(model.Language)}&ORDERID={Uri.EscapeDataString(model.OrderId)}&PSPID={Uri.EscapeDataString(model.Pspid)}&SHASIGN={Uri.EscapeDataString(SHASIGN)}";
+    }
+}
+
+public class BarClayCardModel
+{
+    public string Amount { get; set; }
+    public string Currency { get; set; }
+    public string Language { get; set; }
+    public string OrderId { get; set; }
+    public string Pspid { get; set; }
+    public string CN { get; set; }
+    public string Email { get; set; }
+    public string AcceptUrl { get; set; }
+}
