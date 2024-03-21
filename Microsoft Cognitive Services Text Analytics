@@ -1,0 +1,50 @@
+using System;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace AIIntegration
+{
+    class Program
+    {
+        static async Task Main(string[] args)
+        {
+            string text = "Welcome to my AI programming!";
+            string apiKey = "Enter API Key";
+            string endpoint = "Enter API End Point";
+
+            string sentiment = await AnalyzeSentiment(text, apiKey, endpoint);
+            Console.WriteLine($"Sentiment: {sentiment}");
+        }
+
+        static async Task<string> AnalyzeSentiment(string text, string apiKey, string endpoint)
+        {
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", apiKey);
+
+                string requestBody = $"{{\"documents\": [{{\"id\": \"1\", \"text\": \"{text}\"}}]}}";
+
+                var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync($"{endpoint}/text/analytics/v3.0/sentiment", content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Error: {response.StatusCode}");
+                    return null;
+                }
+
+                string responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response: {responseContent}");
+
+                // Parse the sentiment from the response
+                // Here you would need to implement JSON parsing based on the response structure of the API
+                // For simplicity, assuming a JSON like {"documents":[{"id":"1","sentiment":"positive"}]}
+                // You would need to adapt this based on the actual response structure of the Text Analytics API
+                // For example, using JSON.NET or System.Text.Json for parsing.
+                // This is just a placeholder to demonstrate the concept.
+                return "positive";
+            }
+        }
+    }
+}
