@@ -1,0 +1,68 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Configuration;
+using System.Data.SqlClient;
+
+namespace WebApplication2.Models
+{
+    public class DBHelper : IDisposable
+    {
+        private readonly string connectionString = ConfigurationManager.ConnectionStrings["DBConnection"].ConnectionString;
+
+        private SqlConnection conn;
+
+        private SqlCommand cmd;
+        public DBHelper()
+        {
+            conn = new SqlConnection(connectionString);
+        }
+        public SqlConnection GetConnection()
+        {
+            try
+            {
+                if (conn.State != System.Data.ConnectionState.Open)
+                {
+                    conn.Open();
+                }
+                return conn;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public void CloseConnection()
+        {
+            try
+            {
+                if (conn != null && conn.State != System.Data.ConnectionState.Closed)
+                {
+                    conn.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public SqlCommand GetCommand(string query, SqlConnection con)
+        {
+            try
+            {
+                cmd = new SqlCommand(query, con);
+                return cmd;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public void Dispose()
+        {
+            CloseConnection();
+            conn.Dispose();
+        }
+    }
+}
